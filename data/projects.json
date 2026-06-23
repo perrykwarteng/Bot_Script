@@ -1,0 +1,30 @@
+[
+  {
+    "id": "f6a6944a55800948",
+    "siteKey": "sk_46151888a8107b0ab7bbce00",
+    "name": "Demo Site",
+    "apiBase": "https://api.example.com",
+    "agentName": "Support Bot",
+    "greeting": "Hello! Need help?",
+    "primaryColor": "#2563EB",
+    "accentColor": "#F59E0B",
+    "position": "right",
+    "chatUiUrl": "",
+    "createdAt": "2026-06-23T14:20:52.817Z",
+    "updatedAt": "2026-06-23T14:20:52.821Z"
+  },
+  {
+    "id": "88b60daf297fe9c3",
+    "siteKey": "sk_a6a161c1a99a265a0aec4126",
+    "name": "Lebene",
+    "apiBase": "https://unintersected-unnationalistic-angele.ngrok-free.dev",
+    "agentName": "Lebene",
+    "greeting": "Hi there! How can I help you?",
+    "primaryColor": "#2563EB",
+    "accentColor": "#F59E0B",
+    "position": "left",
+    "chatUiUrl": "",
+    "createdAt": "2026-06-23T14:48:35.700Z",
+    "updatedAt": "2026-06-23T14:48:35.700Z"
+  }
+]

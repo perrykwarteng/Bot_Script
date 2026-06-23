@@ -1,0 +1,1 @@
+ALTER TABLE "projects" ADD COLUMN "powered_by" text DEFAULT '' NOT NULL;
