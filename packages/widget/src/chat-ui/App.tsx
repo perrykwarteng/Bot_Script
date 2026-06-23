@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, useCallback } from "react";
 
 interface Config {
   apiBase: string;
+  serverBase: string;
   sessionId: string;
   agentName: string;
   greeting: string;
@@ -38,9 +39,40 @@ const COLORS = {
   document.head.appendChild(s);
 })();
 
+function pickReply(chunk: any): string {
+  return chunk.reply || chunk.message || chunk.text || chunk.response || chunk.content || chunk.token || chunk.answer || chunk.output || "";
+}
+
+async function* parseSSE(res: Response): AsyncGenerator<any> {
+  const ct = (res.headers.get("content-type") || "").toLowerCase();
+  if (ct.includes("json")) {
+    yield await res.json();
+    return;
+  }
+  const reader = res.body!.getReader();
+  const decoder = new TextDecoder();
+  let buffer = "";
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buffer += decoder.decode(value, { stream: true });
+    const lines = buffer.split("\n");
+    buffer = lines.pop() || "";
+    for (const line of lines) {
+      const trimmed = line.trim();
+      if (trimmed.startsWith("data:")) {
+        const jsonStr = trimmed.slice(5).trim();
+        if (jsonStr === "[DONE]" || !jsonStr) continue;
+        try { yield JSON.parse(jsonStr); } catch {}
+      }
+    }
+  }
+}
+
 export default function App() {
   const [config, setConfig] = useState<Config>({
     apiBase: getParam("apiBase"),
+    serverBase: getParam("serverBase") || window.location.origin,
     sessionId: getParam("sessionId") || "anon_" + Math.random().toString(36).slice(2, 10),
     agentName: getParam("agentName") || "Chat Assistant",
     greeting: getParam("greeting") || "Hi there! How can I help you?",
@@ -87,16 +119,34 @@ export default function App() {
     setLoading(true);
 
     try {
-      const res = await fetch(config.apiBase + "/api/chat", {
+      const res = await fetch(config.serverBase + "/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: text, sessionId: config.sessionId }),
+        body: JSON.stringify({ message: text, sessionId: config.sessionId, apiBase: config.apiBase }),
       });
       if (!res.ok) throw new Error("HTTP " + res.status);
-      const data = await res.json();
-      const reply = data.reply || data.message || data.text || "Got it!";
-      setMessages((prev) => [...prev, { role: "bot", text: reply, time: now() }]);
-    } catch {
+
+      let reply = "";
+      let started = false;
+      for await (const chunk of parseSSE(res)) {
+        const fragment = pickReply(chunk);
+        if (fragment) {
+          reply += fragment;
+          if (!started) {
+            started = true;
+            setMessages((prev) => [...prev, { role: "bot", text: reply, time: now() }]);
+          } else {
+            setMessages((prev) => {
+              const updated = [...prev];
+              const last = updated[updated.length - 1];
+              if (last?.role === "bot") updated[updated.length - 1] = { ...last, text: reply };
+              return updated;
+            });
+          }
+        }
+      }
+    } catch (err) {
+      console.error("Chat send error:", err, "serverBase:", config.serverBase, "apiBase:", config.apiBase);
       setMessages((prev) => [...prev, { role: "bot", text: "Sorry, could not reach the server.", time: now() }]);
     } finally {
       setLoading(false);

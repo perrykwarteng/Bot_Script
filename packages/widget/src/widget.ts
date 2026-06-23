@@ -111,6 +111,7 @@ interface WidgetConfig {
     function buildIframeSrc(): string {
       const p = new URLSearchParams({
         apiBase: API_BASE,
+        serverBase: SERVER_BASE,
         sessionId: SESSION_ID,
         agentName: AGENT_NAME,
         greeting: GREETING,
@@ -135,7 +136,7 @@ interface WidgetConfig {
           iframeLoaded = true;
           iframe.contentWindow?.postMessage({
             type: "CW_INIT",
-            config: { apiBase: API_BASE, sessionId: SESSION_ID, agentName: AGENT_NAME, greeting: GREETING, primaryColor: PRIMARY_COLOR, accentColor: ACCENT_COLOR, avatarUrl: AVATAR_URL, poweredBy: POWERED_BY },
+            config: { apiBase: API_BASE, serverBase: SERVER_BASE, sessionId: SESSION_ID, agentName: AGENT_NAME, greeting: GREETING, primaryColor: PRIMARY_COLOR, accentColor: ACCENT_COLOR, avatarUrl: AVATAR_URL, poweredBy: POWERED_BY },
           }, "*");
         };
       }
